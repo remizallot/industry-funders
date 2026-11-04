@@ -5,7 +5,7 @@ compact JSON payload into scripts/explorer_template.html and writes
 data/processed/industry-funders-explorer.html (also copied to the project
 root). Open the file in a browser; no server is needed.
 """
-import json, shutil, sys
+import base64, json, os, shutil, sys
 import pandas as pd, yaml
 
 THEMES = yaml.safe_load(open("config/themes.yml"))["themes"]
@@ -66,7 +66,9 @@ def main():
     payload = {"companies": companies, "rows": rows, "unis": unis, "schemes": schemes,
                "themes": [THEMES[k]["label"] for k in THEME_KEYS],
                "types": {v: k.replace("_", " ") for k, v in TYPE_CODES.items()},
-               "built": pd.Timestamp.today().strftime("%d %B %Y")}
+               "built": pd.Timestamp.today().strftime("%d %B %Y"),
+               "pdf": base64.b64encode(open("industry-funders-plan.pdf", "rb").read()).decode()
+               if os.path.exists("industry-funders-plan.pdf") else ""}
     tpl = open("scripts/explorer_template.html").read()
     html = tpl.replace("/*__DATA__*/null", json.dumps(payload, separators=(",", ":")))
     out = "data/processed/industry-funders-explorer.html"

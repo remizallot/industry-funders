@@ -146,7 +146,22 @@ def main():
             "grant_category", "scheme", "competition", "year", "start", "end", "award_gbp", "themes",
             "company_postcode", "company_region", "project_id", "grant_reference"]
     ev_out = ev[[c for c in cols if c in ev.columns]].sort_values(["company_name", "year"])
+    about = pd.DataFrame({"Industry funders of biological and chemical sciences research at UK universities": [
+        "Author: Rémi Zallot, School of Biological and Chemical Sciences, Manchester Metropolitan University",
+        f"Built: {pd.Timestamp.today().strftime('%d %B %Y')}",
+        "Code, method and documentation: https://github.com/remizallot/industry-funders",
+        "",
+        "Sheets: master (one row per organisation, ranked), by_theme (top companies per School theme), evidence (every underlying record).",
+        "Sources: UKRI Gateway to Research (project partners and collaborators), Innovate UK funded projects since 2004 (participants and KTPs), "
+        "OpenAlex (corporate funders and company co-authors of UK university papers), published lists of named partnership schemes.",
+        "Scoring: studentship 3, fellowship 2, KTP 2, named partnership 2, research grant 1, other Innovate UK project 0.5, scaled by recency; "
+        "papers funded 0.15 and co-authored 0.05 each, capped per company. Companies keyed on Companies House number where known.",
+        "org_type = public_or_rto marks research and technology organisations, catapults and similar; filter on company for the target list.",
+        "Suggested citation: Zallot R. (2026). Industry funders of biological and chemical sciences research at UK universities: an evidence-based target list. "
+        "Manchester Metropolitan University. https://github.com/remizallot/industry-funders",
+    ]})
     with pd.ExcelWriter("data/processed/industry-funders.xlsx", engine="openpyxl") as xw:
+        about.to_excel(xw, "about", index=False)
         master.to_excel(xw, "master", index=False)
         by_theme.to_excel(xw, "by_theme", index=False)
         ev_out.to_excel(xw, "evidence", index=False)
