@@ -1,0 +1,179 @@
+# Phase 3: named industry-academic partnership schemes scraped by
+# scripts/07_scrape_schemes.py. One entry per page (or per download).
+#
+# strategy values (implemented in the script):
+#   ukri_led_by_blocks        h4 title, then "Led by <person>, <university>" and
+#                             "Business partner: <person>, <company>" paragraphs
+#   ukri_title_then_partners  title line followed by "<university> and <company>"
+#   prose_pairs               regex over prose: "partnership between A and B",
+#                             "A will partner with B", "led by A with B" and
+#                             short "A, B and <University>" list lines
+#   rs_case_studies           Royal Society case-study pages linked from the
+#                             scheme page: "Awarded: YYYY - YYYY, Employer: X, Host: Y"
+#   raeng_filter              POST to the Academy's Umbraco filter endpoint with a
+#                             category id; parse result cards
+#   rc1851_list               "Name, Company and University" lines after
+#                             "list of YYYY Industrial Fellows"
+#   ukrpif_ods                download the ODS spreadsheet; regex candidate partner
+#                             names from the project summary column
+#   list_after_heading        list items / short lines after a heading
+#   mibtp_case                "University:" and "Industry Partner:" field pairs
+#   logo_alts                 alt text of partner logos inside image links
+#   gap                       nothing to scrape; write a visible gap row
+#
+# Checked on 2026-11-04. UKRI removes old news pages, so the pre-2025 EPSRC
+# rounds are taken from gov.uk press releases where they still exist.
+
+user_agent: "industry-funders-scheme-scraper/0.1 (academic research tool, Manchester Metropolitan University; Python requests)"
+request_delay_seconds: 1.5
+
+sources:
+
+  # 1. EPSRC Prosperity Partnerships -------------------------------------
+  - source: EPSRC Prosperity Partnerships
+    url: https://www.ukri.org/news/uk-businesses-and-academia-partner-up-in-cutting-edge-research/
+    strategy: ukri_led_by_blocks
+    year: 2025
+    notes: "Round announced 10 July 2025 (23 partnerships)"
+
+  - source: EPSRC Prosperity Partnerships
+    url: https://www.gov.uk/government/news/leading-uk-businesses-and-researchers-in-75-million-collaboration-to-create-technologies-of-the-future
+    strategy: prose_pairs
+    year: 2021
+    notes: "Round announced 2 April 2021 (9 partnerships); gov.uk press release"
+
+  - source: EPSRC Prosperity Partnerships
+    url: https://www.gov.uk/government/news/new-tech-teams-to-protect-dolphins-and-create-next-generation-of-super-strong-aluminium
+    strategy: prose_pairs
+    year: 2019
+    notes: "Round announced 10 July 2019 (4 partnerships); gov.uk press release"
+
+  - source: EPSRC Prosperity Partnerships
+    url: https://www.ukri.org/news/partnerships-to-create-technologies-of-the-future/
+    strategy: gap
+    notes: "2017, 2018, 2021, 2023 and early-stage 2023 UKRI announcements have been removed from ukri.org (HTTP 404); the UK Government Web Archive disallows robots. Use Gateway to Research for these rounds."
+
+  - source: BBSRC Prosperity Partnerships
+    url: https://www.ukri.org/news/bbsrc-launches-uks-first-bioscience-prosperity-partnership-programme/
+    strategy: ukri_title_then_partners
+    year: 2023
+    notes: "First BBSRC round, 29 November 2023 (10 projects)"
+
+  - source: BBSRC Prosperity Partnerships
+    url: https://www.ukri.org/news/new-bbsrc-prosperity-partnerships-set-to-boost-uk-bioinnovation/
+    strategy: prose_pairs
+    year: 2025
+    notes: "Second BBSRC round, 23 January 2025 (4 projects, prose only)"
+
+  # 2. BBSRC Collaborative Training Partnerships -------------------------
+  - source: BBSRC Collaborative Training Partnerships
+    url: https://www.ukri.org/news/bio-researchers-of-the-future-get-22-5-million-boost/
+    strategy: gap
+    notes: "UKRI CTP award announcement and the BBSRC doctoral-training pages return HTTP 404 (Nov 2026); no live list of CTPs with lead companies found on ukri.org"
+
+  # 3. Royal Society Industry Fellowships ---------------------------------
+  - source: Royal Society Industry Fellowships
+    url: https://royalsociety.org/grants/industry-fellowships/
+    strategy: rs_case_studies
+    notes: "The Society publishes no awardee list; only ten case studies are linked from the scheme page"
+
+  # 4. Royal Academy of Engineering ---------------------------------------
+  - source: RAEng Research Chairs and Senior Research Fellowships
+    url: https://raeng.org.uk/Umbraco/Surface/FilterableContent/SearchForm
+    strategy: raeng_filter
+    category_id: "69113"
+    listing_page: https://raeng.org.uk/programmes-and-prizes/programmes/uk-grants-and-prizes/support-for-research/research-awardees/
+    notes: "Awardee cards: 'Name, University' and 'Sponsor/Royal Academy of Engineering Research Chair in ...'"
+
+  - source: RAEng Industrial Fellowships
+    url: https://raeng.org.uk/Umbraco/Surface/FilterableContent/SearchForm
+    strategy: raeng_filter
+    category_id: "50408"
+    listing_page: https://raeng.org.uk/programmes-and-prizes/programmes/uk-grants-and-prizes/support-for-research/research-awardees/
+    notes: "Awardee cards: 'Name, University / Company' and project title"
+
+  # 5. Royal Commission for the Exhibition of 1851 ------------------------
+  - source: 1851 Industrial Fellowships
+    url: https://royalcommission1851.org/news/prestigious-royal-commission-fellowships-awarded-to-twelve-early-career-researchers-to-address-pressing-industry-challenges
+    strategy: rc1851_list
+    year: 2025
+  - source: 1851 Industrial Fellowships
+    url: https://royalcommission1851.org/news/uk-innovation-reinforced-through-royal-commission-fellowship
+    strategy: rc1851_list
+    year: 2024
+  - source: 1851 Industrial Fellowships
+    url: https://royalcommission1851.org/news/royal-commission-boosts-uk-research-development-with-fellowships-linking-academia-and-industry-2
+    strategy: rc1851_list
+    year: 2023
+  - source: 1851 Industrial Fellowships
+    url: https://royalcommission1851.org/news/royal-commission-backs-uk-industry-and-innovation-to-invigorate-british-research-and-development
+    strategy: rc1851_list
+    year: 2022
+  - source: 1851 Industrial Fellowships
+    url: https://royalcommission1851.org/news/uk-industry-receives-cash-infusion-from-prince-alberts-royal-commission-to-tackle-global-challenges-2
+    strategy: rc1851_list
+    year: 2021
+  - source: 1851 Industrial Fellowships
+    url: https://royalcommission1851.org/news/2020industrialfellows-1
+    strategy: rc1851_list
+    year: 2020
+
+  # 6. UK Research Partnership Investment Fund ----------------------------
+  - source: UKRPIF
+    url: https://www.ukri.org/wp-content/uploads/2021/10/UKRI-011024-UKRPIFFundedProjectsRound7.ods
+    strategy: ukrpif_ods
+    publication_page: https://www.ukri.org/publications/uk-research-partnership-investment-fund-ukrpif-funded-projects/
+    notes: "Spreadsheet has no partner column; partner names are regex candidates from the summary text and need checking"
+
+  # 7. BBSRC DTP industrial partner pages ---------------------------------
+  - source: BBSRC DTP industrial partners
+    url: https://www.nld-dtp.org.uk/associate-partners
+    strategy: list_after_heading
+    heading: Associate Partners
+    university: Newcastle University
+    person_role: DTP industrial partner
+    notes: "Newcastle-Liverpool-Durham DTP associate partners"
+
+  - source: BBSRC DTP industrial partners
+    url: https://warwick.ac.uk/fac/cross_fac/mibtp/phd/case/
+    strategy: mibtp_case
+    university: University of Warwick
+    person_role: DTP industrial partner
+    notes: "MIBTP CASE projects; the partner university is the project host, DTP lead is Warwick"
+
+  - source: BBSRC DTP industrial partners
+    url: https://www.biodtp.ox.ac.uk/industrial-partners
+    strategy: logo_alts
+    university: University of Oxford
+    person_role: DTP industrial partner
+    notes: "Partner logos only; list includes national facilities as well as companies"
+
+  - source: BBSRC DTP industrial partners
+    url: https://biology.ed.ac.uk/eastbio/about-eastbio/collaboration-with-industry
+    strategy: gap
+    university: University of Edinburgh
+    notes: "EASTBIO industry pages describe CASE routes but name no companies"
+
+  - source: BBSRC DTP industrial partners
+    url: https://www.whiterose-mechanisticbiology-dtp.ac.uk/
+    strategy: gap
+    university: University of Leeds
+    notes: "White Rose DTP site has no industrial partner list (PIPS host information only)"
+
+  - source: BBSRC DTP industrial partners
+    url: https://www.swbio.ac.uk/prospective-case-partners/
+    strategy: gap
+    university: University of Bristol
+    notes: "SWBio CASE partner page names no companies"
+
+  - source: BBSRC DTP industrial partners
+    url: https://bbsrcdtp.lifesci.cam.ac.uk/university-departments-and-partner-institutions
+    strategy: gap
+    university: University of Cambridge
+    notes: "Cambridge DTP lists research institutes only, no companies"
+
+  - source: BBSRC DTP industrial partners
+    url: https://www.nottingham.ac.uk/
+    strategy: gap
+    university: University of Nottingham
+    notes: "Nottingham-Rothamsted DTP not scraped: nottingham.ac.uk robots.txt states no scraping or dataset creation"

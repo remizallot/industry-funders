@@ -1,0 +1,74 @@
+# OpenAlex subfields (primary_topic.subfield.id) that fall within the School's
+# remit. Works are restricted to these subfields, UK university authors and
+# publication years from `year_from`.
+year_from: 2015
+subfields:
+  1312: Molecular Biology
+  1311: Genetics
+  1307: Cell Biology
+  1306: Cancer Research
+  1303: Biochemistry
+  1304: Biophysics
+  1305: Biotechnology
+  1308: Clinical Biochemistry
+  1309: Developmental Biology
+  1310: Endocrinology
+  1313: Molecular Medicine
+  1314: Physiology
+  1315: Structural Biology
+  1302: Aging
+  2403: Immunology
+  2404: Microbiology
+  2402: Applied Microbiology and Biotechnology
+  2405: Parasitology
+  2406: Virology
+  2804: Cellular and Molecular Neuroscience
+  2806: Developmental Neuroscience
+  2802: Behavioral Neuroscience
+  2807: Endocrine and Autonomic Systems
+  3004: Pharmacology
+  3003: Pharmaceutical Science
+  3005: Toxicology
+  3002: Drug Discovery
+  2307: Health, Toxicology and Mutagenesis
+  1100: General Agricultural and Biological Sciences
+  1102: Agronomy and Crop Science
+  1103: Animal Science and Zoology
+  1104: Aquatic Science
+  1105: Ecology, Evolution, Behavior and Systematics
+  1106: Food Science
+  1107: Forestry
+  1108: Horticulture
+  1109: Insect Science
+  1110: Plant Science
+  1111: Soil Science
+  2303: Ecology
+  2302: Ecological Modeling
+  2309: Nature and Landscape Conservation
+  2304: Environmental Chemistry
+  2310: Pollution
+  2311: Waste Management and Disposal
+  2312: Water Science and Technology
+  2306: Global and Planetary Change
+  1902: Atmospheric Science
+  1904: Earth-Surface Processes
+  1906: Geochemistry and Petrology
+  1907: Geology
+  1910: Oceanography
+  1911: Paleontology
+  1602: Analytical Chemistry
+  1603: Electrochemistry
+  1604: Inorganic Chemistry
+  1605: Organic Chemistry
+  1606: Physical and Theoretical Chemistry
+  1607: Spectroscopy
+  1503: Catalysis
+  1504: Chemical Health and Safety
+  1506: Filtration and Separation
+  1508: Process Chemistry and Technology
+  2505: Materials Chemistry
+  2507: Polymers and Plastics
+  2508: Surfaces, Coatings and Films
+  2502: Biomaterials
+  2103: Fuel Technology
+  1502: Bioengineering

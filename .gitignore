@@ -1,0 +1,8 @@
+.venv/
+data/raw/
+data/processed/
+__pycache__/
+config/openalex_key.txt
+industry-funders-ranked.xlsx
+*.xlsx
+.DS_Store

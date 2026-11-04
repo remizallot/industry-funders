@@ -1,0 +1,173 @@
+# Research themes of the School of Biological and Chemical Sciences (former
+# Departments of Life Sciences and Natural Sciences). Each theme has regular
+# expressions matched, case-insensitively, against project titles and
+# abstracts, and lists of UKRI research subjects and topics that map to it.
+# Matching is inclusion-first: a record is kept if any theme matches.
+
+themes:
+  biomedical_health:
+    label: Biomedical and health sciences
+    keywords:
+      - "infection|infectious|pathogen|antimicrobial|antibiotic|antifungal|antiviral|sepsis|virolog|bacteri|parasit"
+      - "cardiovascular|vascular|cardiac|heart|atheroscler|thrombo|stroke|hypertens"
+      - "ageing|aging|lifelong health|frailty|sarcopenia|dementia|alzheimer|parkinson"
+      - "neuroscien|neuron|neurodegenerat|neuroinflamm|synap"
+      - "stem cell|regenerative|tissue engineer|organoid|wound heal"
+      - "genetic|genomic|epigenet|gene expression|transcriptom|crispr|sequencing"
+      - "physiolog|endocrin|metabol|diabet|obesity|nutrition|dietary|gut microbio"
+      - "haematolog|hematolog|blood scien|anaemia|leukaemia|lymphoma|platelet"
+      - "cancer|tumour|tumor|oncolog|carcinoma|metasta"
+      - "immun|inflamm|vaccine|antibod|cytokine|allerg"
+      - "bioinformatic|computational biology|systems biology|biomedical data|proteomic|metabolomic"
+      - "biomarker|point-of-care|immunoassay"
+    ukri_subjects:
+      - "Medical & health interface"
+      - "Biological sciences"
+    ukri_topics:
+      - "Medical Microbiology|Microbiology|Virology|Infection|Immunology|Cardiovascular|Neuroscience|Genetics|Genomics|Haematology|Cancer|Oncology|Stem Cell|Regenerative|Ageing|Nutrition|Metabolism|Physiology|Pharmacology|Drug Discovery|Diagnostics|Bioinformatics|Systems Biology|Cell Biology|Molecular"
+
+  molecular_biotech:
+    label: Molecular biosciences and biotechnology
+    keywords:
+      - "molecular biolog|cell biolog|cellular|protein|enzym|biochem|metabolic engineer|structural biolog"
+      - "microbio|microbial|fermentation|yeast|fungal|fungi|bacterial|archaea|microbiome|biofilm"
+      - "synthetic biolog|engineering biolog|biotechnolog|bioprocess|biomanufactur|bioreactor|biocatalys|biosynthe"
+      - "industrial biotech|biorefin|bio-based|biofuel|bioethanol|biopolymer|bioplastic"
+      - "food science|food safety|food technolog|agri-?food|agricultur|crop|plant science|livestock|poultry|aquacultur|dairy"
+      - "natural product|secondary metabolit|antibiotic discovery|cytochrome|P450|sterol|lipid"
+    ukri_subjects:
+      - "Biological sciences"
+      - "Agri-environmental science"
+    ukri_topics:
+      - "Biochemistry|Biotechnology|Microbiology|Synthetic Biology|Industrial Biotechnology|Bioprocess|Enzyme|Protein|Food Science|Agri|Plant Science|Crop|Microbial|Fermentation|Structural Biology|Molecular Biology|Cell Biology|Metabolic"
+
+  ecology_conservation:
+    label: Organismal biology, ecology and conservation
+    keywords:
+      - "ecolog|ecosystem|biodivers|conservation biolog|habitat|wildlife|rewilding|restoration ecolog|invasive species|endangered"
+      - "evolution|animal behaviou?r|zoolog|ornitholog|entomolog|pollinator|amphibian|reptile|fisheries|primat"
+      - "coastal|saltmarsh|mangrove|wetland|peatland|woodland|forest|grassland|marine biolog"
+      - "plant scien|plant biolog|plant patholog|botan|mycorrhiz|arboricultur"
+      - "nature-based|natural capital|ecosystem service|invasive species|wildlife disease"
+    ukri_subjects:
+      - "Ecology, biodiversity & systematics"
+      - "Terrestrial & freshwater environment"
+      - "Marine environments"
+      - "Biological sciences"
+    ukri_topics:
+      - "Ecology|Biodiversity|Conservation|Evolution|Behaviour|Population|Community Ecology|Ecosystem|Plant|Animal|Zoology|Ornithology|Entomology|Marine|Freshwater|Environmental Microbiology"
+
+  environmental_earth:
+    label: Environmental and earth sciences
+    keywords:
+      - "environmental chem|pollut|contaminan|microplastic|pesticide|heavy metal|endocrine disrupt|ecotoxic|toxicolog"
+      - "water quality|wastewater|freshwater|catchment|hydrolog|groundwater|soil scien|soil health|soil carbon"
+      - "climate scien|climate change impact|palaeoclimat|atmospheric chem|air quality|air pollut"
+      - "earth science|geolog|geograph|geomorpholog|sediment|glaci|permafrost|volcan|palaeo|paleo"
+      - "remote sensing|earth observation|environmental monitoring"
+      - "food waste|biowaste|organic waste|waste valoris|circular economy|composting|landfill|anaerobic digest|beneficiation"
+    ukri_subjects:
+      - "Environmental sciences"
+      - "Earth sciences"
+      - "Atmospheric & climate science"
+      - "Pollution, waste & resources"
+      - "Terrestrial & freshwater environment"
+      - "Marine environments"
+      - "Agri-environmental science"
+    ukri_topics:
+      - "Environment|Pollution|Waste|Water|Soil|Climate|Earth|Geolog|Geograph|Hydrolog|Atmospher|Ecotoxic|Remote Sensing|Carbon|Sediment|Glaci"
+
+  chemistry:
+    label: Chemistry
+    keywords:
+      - "chemistr|chemical synth|organic synth|synthetic chem|medicinal chem|chemical biolog|drug design|drug discover|lead compound|pharmaceutic|formulation|api manufactur"
+      - "analytical chem|mass spectrom|chromatograph|spectroscop|nmr|forensic|electrochem"
+      - "materials chem|physical chem|polymer chem|polymer synth|biopolymer|nanomaterial|nanoparticle|graphene|porous material|metal-organic framework|zeolite"
+      - "catalys|photocatal|electrocatal|green chem|sustainable chem|solvent|flow chem"
+      - "fuel cell|green hydrogen|hydrogen production|electrolys"
+      - "bioprint|bioink|3d printed scaffold|printed electronics"
+    ukri_subjects:
+      - "Chemistry"
+      - "Materials sciences"
+      - "Energy"
+      - "Pharmaceutical sciences"
+    ukri_topics:
+      - "Chemistry|Chemical|Catalys|Synthesis|Materials|Polymer|Analytical|Spectroscop|Electrochem|Fuel Cell|Hydrogen|Energy Storage|Pharmaceutical|Medicinal|Drug|Nanotechnology|Surface|Crystal"
+
+  crosscutting:
+    label: Cross-cutting and facility-led
+    keywords:
+      - "biomaterial|medical device|implant|scaffold|hydrogel|drug delivery|nanomedicine"
+      - "in vitro diagnostic|biosensor|lateral flow|point of care"
+      - "machine learning for (drug|protein|molecul|genom)|ai-driven drug|protein language model"
+      - "fuel cell innovation|core analytical|print city"
+    ukri_subjects: []
+    ukri_topics:
+      - "Biomaterials|Medical Devices|Biosensor|Drug Delivery|Imaging|Tissue Engineering"
+
+# Innovate UK sectors that are included without a keyword test. Projects in
+# other sectors are included only if a theme keyword matches the title or
+# public description.
+innovate_uk_sectors_always:
+  - "Ageing Society, Health & Nutrition"
+  - "Life and Land"
+  - "Life Sciences Lvl3"
+  - "Engineering Biology lvl3"
+  - "Vaccine Development"
+  - "Advanced Manufacturing - Agri Tech lvl3"
+  - "Energy and Environment"
+
+# GtR lead funders whose projects are included without a keyword test
+# (their remit lies inside the School's); other funders need a subject,
+# topic or keyword match.
+gtr_funders_always:
+  - "BBSRC"
+  - "NERC"
+  - "MRC"
+
+# GtR lead funders outside the School's remit: included only when a UKRI
+# research subject or topic maps to a theme (title keywords are not enough).
+gtr_funders_subject_only:
+  - "AHRC"
+  - "ESRC"
+
+# Names that mark an organisation as academic or public-research rather than
+# a company. Matched case-insensitively against the organisation name.
+academic_patterns:
+  - "universit"
+  - "\\bcollege\\b"
+  - "school of"
+  - "nhs"
+  - "hospital"
+  - "research council"
+  - "\\bukri\\b"
+  - "institute"
+  - "laboratory"
+  - "catapult"
+  - "\\bcouncil\\b"
+  - "academy"
+  - "royal society"
+  - "wellcome"
+  - "charity|foundation|trust\\b"
+  - "government|department of|ministry|agency|authority|executive"
+  - "\\bcic\\b|community interest"
+  - "museum|botanic garden|zoo\\b|zoological"
+  - "polytechnic|politecnico|universidad|universit[aà]|universiteit|hochschule|école|ecole|cnrs|inserm|inra|fraunhofer|max planck|helmholtz|leibniz|eth z"
+  - "met office|meteorological office|public health|health security|health protection|health and safety executive|\\bhse\\b|\\bmhra\\b|\\bnice\\b"
+  - "natural england|natural resources wales|naturescot|scottish natural heritage|environment agency|\\bsepa\\b|forestry commission|forest research|marine scotland|\\bdefra\\b|department for|ministry of|home office|foreign office|cabinet office"
+  - "geological survey|antarctic survey|ordnance survey|\\bsurvey\\b|centre for ecology|ukceh|\\bceh\\b|national oceanography|plymouth marine|scottish association for marine|\\bcefas\\b|fisheries and aquaculture science"
+  - "rothamsted|john innes|james hutton|pirbright|babraham|quadram|earlham|sanger|crick|roslin|moredun|\\bfera\\b|animal and plant health|\\bapha\\b|veterinary laboratories|scotland.?s rural college|\\bsruc\\b|\\bahdb\\b|horticulture development board|national institute of agricultural botany|\\bniab\\b"
+  - "light source|synchrotron|\\bdstl\\b|porton down|defence science|atomic weapons|\\bawe\\b|national physical laboratory|\\bnpl\\b|national nuclear|culham|rutherford|daresbury|\\bstfc\\b|\\bukaea\\b"
+  - "world health|\\bwho\\b|united nations|\\bunicef\\b|\\bunesco\\b|\\bfao\\b|european commission|european space|\\bnasa\\b|\\bnoaa\\b|\\busgs\\b|\\bcdc\\b|\\bnih\\b|national institutes? of|royal botanic|\\bkew\\b|natural history museum|\\bzsl\\b|wildlife trust|\\brspb\\b|national trust|wildfowl"
+  - "cancer research uk|british heart foundation|alzheimer|diabetes uk|versus arthritis|parkinson.?s uk|\\bmnd\\b|leverhulme|nuffield|wolfson|gatsby|nesta|carbon trust|energy saving trust"
+  - "primary care|clinical commissioning|\\bccg\\b|health board|foundation trust|\\bgp\\b|medical school|royal college"
+  - "city council|county council|borough|combined authority|greater manchester|transport for|local enterprise|\\blep\\b|chamber of commerce|growth hub"
+
+# Research and technology organisations, catapults and national facilities:
+# kept in the evidence but flagged as public_or_rto rather than company.
+rto_patterns:
+  - "centre for process innovation|\\bcpi\\b|manufacturing technology centre|\\bmtc\\b|\\btwi\\b|national composites|advanced manufacturing research centre|\\bamrc\\b|nuclear amrc"
+  - "catapult|cenex|building research establishment|\\bbre\\b|\\bnpl\\b|national physical laboratory|\\bhslr?\\b|health and safety laboratory"
+  - "james hutton|niab|agri-?tech centre|agri-?epi|\\bchap\\b|crop health and protection|centre for innovation excellence in livestock|\\bciel\\b"
+  - "\\bwrap\\b|energy systems catapult|offshore renewable energy|\\bore\\b catapult|compound semiconductor applications|connected places|cell and gene therapy|medicines discovery catapult|high value manufacturing"
+  - "uk biobank|biobank|genomics england|our future health|sanger"
