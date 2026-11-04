@@ -181,6 +181,9 @@
   <h2>Scoring</h2>
   <p>Each evidence row earns points by type, scaled by recency over twenty years: studentship 3, fellowship 2, KTP 2, named partnership 2, research grant 1, other Innovate UK project 0.5. Publication rows earn 0.15 per paper funded and 0.05 per paper co-authored, capped at 60 and 20 points per company, so publication volume supports but never dominates the direct evidence of funded people. Companies are keyed on Companies House number where either source gives one, otherwise on a normalised name with legal suffixes removed and a short alias list (GSK, AstraZeneca, Unilever and similar). In the explorer, the score is recomputed from the rows that pass your year range and evidence-type filters.</p>
 
+  <h2>How themes are assigned</h2>
+  <p>Themes are assigned in one of two ways, shown per row when a company is expanded. By rule: UKRI subject and topic classifications, OpenAlex subfields, or keywords in titles (one match) and abstracts (two different keywords). By a local language model, when the optional classifier stage has been run: every project description is embedded and matched to the theme descriptions, and projects behind direct evidence or with an ambiguous match are re-read by a small instruction-tuned model that returns a primary theme, secondary themes and a one-line justification (the "why" line). A company's primary theme is the one carrying most of its evidence rows; its profile shows the share of rows in each theme. <span id="tm"></span></p>
+
   <h2>Limitations</h2>
   <ul>
     <li>GtR records partner contributions as declared at award, not what was paid, and block doctoral training grants list the grant rather than every industrial student.</li>
@@ -205,7 +208,7 @@ const DIRECT = new Set(["S","F","K","P"]);
 const $ = id => document.getElementById(id);
 document.getElementById("built").textContent = D.built;
 document.querySelectorAll(".built, #built2").forEach(e => e.textContent = D.built);
-if (D.theme_methods) document.getElementById("tm").textContent = "This build: " + Object.entries(D.theme_methods).map(([k, v]) => `${v.toLocaleString()} rows by ${k}`).join(", ") + ".";
+if (D.theme_methods && document.getElementById("tm")) document.getElementById("tm").textContent = "This build: " + Object.entries(D.theme_methods).map(([k, v]) => `${v.toLocaleString()} rows by ${k}`).join(", ") + ".";
 if (D.pdf) document.getElementById("pdf").href = "data:application/pdf;base64," + D.pdf;
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
