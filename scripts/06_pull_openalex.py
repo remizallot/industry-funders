@@ -16,7 +16,7 @@ hundred cheap requests are needed:
 All intermediate responses are cached under data/raw/openalex so reruns
 cost nothing. Output: data/processed/openalex_evidence.csv.
 """
-import json, os, re, sys, time
+import hashlib, json, os, re, sys, time
 import pandas as pd, requests, yaml
 
 OA = "https://api.openalex.org"
@@ -148,7 +148,8 @@ def coauthor_route():
             while state["cursor"]:
                 d = oa_get("works", {"filter": base_filter() + ",authorships.institutions.type:company",
                                      "select": "id,publication_year,primary_topic,authorships",
-                                     "per_page": 200, "cursor": state["cursor"]}, f"coauthor_{state['cursor'][:40]}")
+                                     "per_page": 200, "cursor": state["cursor"]},
+                           f"coauthor_{hashlib.md5(state['cursor'].encode()).hexdigest()}")
                 for w in d.get("results", []):
                     comps, unis = {}, {}
                     n_inst = len({i["id"] for a in w.get("authorships", []) for i in a.get("institutions", [])})
@@ -166,7 +167,10 @@ def coauthor_route():
                                                   "university": un, "university_id": uid,
                                                   "year": w.get("publication_year"),
                                                   "subfield": (w.get("primary_topic") or {}).get("subfield", {}).get("display_name")}) + "\n")
-                state["cursor"] = d.get("meta", {}).get("next_cursor")
+                nxt = d.get("meta", {}).get("next_cursor")
+                if nxt == state["cursor"]:
+                    raise RuntimeError("cursor did not advance; aborting to avoid a loop")
+                state["cursor"] = nxt
                 save_state()
                 if state["requests"] % 50 == 0:
                     print(f"  coauthor works: {state['requests']} requests so far", file=sys.stderr)
