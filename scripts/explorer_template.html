@@ -49,6 +49,7 @@
   #method .svgwrap { overflow-x:auto; border:1px solid var(--line); border-radius:6px; padding:8px; background:#fff; }
   #method .cite { background:var(--chip); border-radius:6px; padding:10px 14px; font-size:13.5px; }
   .author { font-size:13px; margin-top:4px; }
+  .notice { margin:8px 0 2px; padding:8px 12px; border-left:3px solid var(--accent); background:var(--chip); font-size:13px; border-radius:0 4px 4px 0; }
   @media (max-width:700px) { th.hide, td.hide { display:none; } .filters { padding:10px 16px; } .wrap { padding:0 8px 30px; } #method { padding:14px 16px 40px; } }
 </style>
 </head>
@@ -57,6 +58,7 @@
   <h1>Industry funders of biological and chemical sciences research</h1>
   <div class="sub">Companies with evidence of funding UK university research: studentships, fellowships, KTPs, named partnerships, grants, Innovate UK projects, funded and co-authored papers. Built <span id="built"></span>. Scores are recomputed for the selected year range.</div>
   <div class="author">Author: <strong>Rémi Zallot</strong>, School of Biological and Chemical Sciences, Manchester Metropolitan University. <a href="https://github.com/remizallot/industry-funders">Code and documentation on GitHub</a>.</div>
+  <div class="notice"><strong>Scope:</strong> the data is filtered to the research areas of the School of Biological and Chemical Sciences (biosciences, biomedical, ecology, environmental and earth sciences, chemistry). It does not cover the whole university; other schools would need their own filter settings. <strong>Snapshot:</strong> built <span class="built"></span> from public data as it stood then. The analysis can be rerun at a later date to gather new data; the method tab explains how.</div>
   <div class="tabs"><button class="on" data-tab="explorer">Explorer</button><button data-tab="method">How the data was gathered</button></div>
 </header>
 <div id="explorer">
@@ -183,8 +185,9 @@
     <li>Directly negotiated studentships that were never advertised and never produced an acknowledged paper are invisible to public data.</li>
   </ul>
 
-  <h2>Reproducibility</h2>
-  <p>All sources are open or published under the Open Government Licence. The pipeline is eight scripts and four configuration files in the GitHub repository, with a Dockerfile and a one-command runner; rerunning it refreshes this page and the workbook from the current public data. The original proposal, written for the School's Head of Research, is embedded here: <a id="pdf" download="industry-funders-plan.pdf">download the proposal (PDF)</a>.</p>
+  <h2>Rerunning the analysis at a later date</h2>
+  <p>This page is a snapshot of public data as it stood on <span class="built"></span>. The sources keep changing: Gateway to Research is refreshed periodically, UKRI updates the Innovate UK spreadsheets several times a year, and OpenAlex changes continuously. All sources are open or published under the Open Government Licence. The pipeline is eight scripts and four configuration files in the GitHub repository, with a Dockerfile and a one-command runner (<code>scripts/run_all.sh</code>); rerunning it rebuilds this page and the workbook from the current public data in about an hour, most of it the Gateway to Research download.</p>
+  <p>The subject scope is set in the configuration files and is specific to the School of Biological and Chemical Sciences. To produce a list for another school, or for the whole university, the theme keywords, UKRI subjects and OpenAlex subfields in <code>config/themes.yml</code> and <code>config/openalex_subfields.yml</code> would be changed and the pipeline rerun; the code itself needs no change. The original proposal, written for the School's Head of Research, is embedded here: <a id="pdf" download="industry-funders-plan.pdf">download the proposal (PDF)</a>.</p>
 
   <h2>Authorship and citation</h2>
   <div class="cite"><strong>Rémi Zallot</strong>, School of Biological and Chemical Sciences, Manchester Metropolitan University. Conceived, designed and directed the analysis; the pipeline code was written with assistance from Claude Code (Anthropic). Built <span id="built2"></span>.<br><br>
@@ -196,7 +199,7 @@ const CAP = {A: 60, C: 20};
 const DIRECT = new Set(["S","F","K","P"]);
 const $ = id => document.getElementById(id);
 document.getElementById("built").textContent = D.built;
-document.getElementById("built2").textContent = D.built;
+document.querySelectorAll(".built, #built2").forEach(e => e.textContent = D.built);
 if (D.pdf) document.getElementById("pdf").href = "data:application/pdf;base64," + D.pdf;
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
