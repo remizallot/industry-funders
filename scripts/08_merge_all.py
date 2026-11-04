@@ -14,6 +14,12 @@ LABELS = {k: v["label"] for k, v in CFG["themes"].items()}
 ACAD = re.compile("|".join(CFG["academic_patterns"]), re.I)
 RTO = re.compile("|".join(CFG.get("rto_patterns", [])), re.I)
 ALIASES = {str(k).upper(): str(v).upper() for k, v in (yaml.safe_load(open("config/aliases.yml")) or {}).items()}
+ISO = {"GB": "United Kingdom", "US": "United States", "DE": "Germany", "FR": "France", "CH": "Switzerland", "NL": "Netherlands",
+       "BE": "Belgium", "DK": "Denmark", "SE": "Sweden", "NO": "Norway", "FI": "Finland", "IE": "Ireland", "ES": "Spain",
+       "IT": "Italy", "PT": "Portugal", "AT": "Austria", "CZ": "Czechia", "HU": "Hungary", "LU": "Luxembourg", "IS": "Iceland",
+       "JP": "Japan", "KR": "South Korea", "CN": "China", "HK": "Hong Kong", "IN": "India", "IL": "Israel", "SA": "Saudi Arabia",
+       "QA": "Qatar", "AE": "United Arab Emirates", "TH": "Thailand", "AU": "Australia", "NZ": "New Zealand", "CA": "Canada",
+       "BR": "Brazil", "ZA": "South Africa", "SG": "Singapore", "TW": "Taiwan", "MX": "Mexico", "AR": "Argentina", "PL": "Poland"}
 OA_CAP = {"corporate_funder": 60.0, "company_coauthor": 20.0}  # max points per company from publication counts
 SUFFIX = re.compile(r"\b(limited|ltd|plc|llp|llc|inc|gmbh|ag|sa|bv|b\.v|nv|co|company|corp|corporation|"
                     r"uk|u\.k|gb|group|holdings|international|europe|the)\b\.?", re.I)
@@ -89,7 +95,7 @@ def main():
     crn = crn[crn["company_crn"].str.strip().ne("") & crn["company_crn"].str.strip().ne("nan")]
     name_to_crn = crn.groupby("name_key")["company_crn"].agg(lambda s: s.value_counts().index[0]).to_dict()
     ev["company_key"] = ev["name_key"].map(name_to_crn).fillna(ev["name_key"])
-    ev["company_country"] = ev.get("company_country").replace({"GB": "United Kingdom", "UK": "United Kingdom"})
+    ev["company_country"] = ev.get("company_country").replace({"UK": "United Kingdom"}).map(lambda c: ISO.get(c, c) if isinstance(c, str) else c)
     cc = ev["company_country"]
     ev.loc[cc.isna() & ev["company_postcode"].astype(str).str.match(r"^[A-Z]{1,2}\d"), "company_country"] = "United Kingdom"
     ev["north_west"] = ev["company_postcode"].map(nw) | ev["company_region"].astype(str).str.contains("North West", case=False)
