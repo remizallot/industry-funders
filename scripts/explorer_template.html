@@ -49,6 +49,9 @@
   #method .svgwrap { overflow-x:auto; border:1px solid var(--line); border-radius:6px; padding:8px; background:#fff; }
   #method .cite { background:var(--chip); border-radius:6px; padding:10px 14px; font-size:13.5px; }
   .author { font-size:13px; margin-top:4px; }
+  .act { display:inline-block; margin-left:6px; padding:0 6px; border:1px solid var(--line); border-radius:4px; font-size:11px; line-height:18px; color:var(--accent); background:var(--bg); cursor:pointer; text-decoration:none; vertical-align:middle; }
+  .act:hover { background:var(--chip); }
+  .act.done { color:#2e8b57; border-color:#2e8b57; }
   .notice { margin:8px 0 2px; padding:8px 12px; border-left:3px solid var(--accent); background:var(--chip); font-size:13px; border-radius:0 4px 4px 0; }
   @media (max-width:700px) { th.hide, td.hide { display:none; } .filters { padding:10px 16px; } .wrap { padding:0 8px 30px; } #method { padding:14px 16px 40px; } }
 </style>
@@ -286,10 +289,12 @@ function render() {
   const frag = document.createDocumentFragment();
   result.slice(0, shown).forEach(r => {
     const tr = document.createElement("tr"); tr.className = "co"; tr.dataset.ci = r.ci;
-    tr.innerHTML = `<td class="num">${r.rank}</td><td><span class="name">${esc(r.name)}</span>${r.otype !== "company" ? ' <span class="chip">RTO / public</span>' : ""}${D.companies[r.ci][3] ? ' <span class="chip">North West</span>' : ""}${D.companies[r.ci][4] ? ' <span class="chip">Manchester Met</span>' : ""}</td>
+    tr.innerHTML = `<td class="num">${r.rank}</td><td><span class="name">${esc(r.name)}</span><button class="act copy" title="Copy the company name">copy</button><a class="act" href="https://www.google.com/search?q=${encodeURIComponent(r.name)}" target="_blank" rel="noopener" title="Search the web for this company">search</a>${r.otype !== "company" ? ' <span class="chip">RTO / public</span>' : ""}${D.companies[r.ci][3] ? ' <span class="chip">North West</span>' : ""}${D.companies[r.ci][4] ? ' <span class="chip">Manchester Met</span>' : ""}</td>
       <td class="num">${r.score.toFixed(1)}</td><td class="num">${r.S||""}</td><td class="num">${r.F||""}</td><td class="num">${r.K||""}</td><td class="num">${r.P||""}</td><td class="num">${r.G||""}</td>
       <td class="num hide">${r.I||""}</td><td class="num hide">${r.A||""}</td><td class="num hide">${r.C||""}</td><td class="num hide">${r.nuni}</td><td class="hide">${r.years}</td><td class="hide">${esc(r.country)}</td>`;
-    tr.addEventListener("click", () => toggle(tr, r));
+    tr.addEventListener("click", e => { if (!e.target.closest(".act")) toggle(tr, r); });
+    tr.querySelector(".copy").addEventListener("click", e => { e.stopPropagation(); copyText(r.name, e.target); });
+    tr.querySelector("a.act").addEventListener("click", e => e.stopPropagation());
     frag.appendChild(tr);
   });
   tb.appendChild(frag);
@@ -305,6 +310,18 @@ function toggle(tr, r) {
   const list = rows.slice(0, 400).map(x => `<div><span class="tag ${x[1]}">${x[1]}</span><span class="muted">${x[2] || "n.d."}</span> · ${esc(x[3] >= 0 ? D.unis[x[3]] : "")} · ${esc(x[4])}${x[5] >= 0 ? ` <span class="muted">(${esc(D.schemes[x[5]])})</span>` : ""}</div>`).join("");
   ev.innerHTML = `<td colspan="14"><div class="small">${esc(c[6])}${c[5] ? " · size: " + esc(c[5]) : ""}${c[2] ? " · " + esc(c[2]) : ""}</div><div class="evlist">${list}${rows.length > 400 ? `<div class="muted">and ${rows.length - 400} more</div>` : ""}</div></td>`;
   tr.after(ev);
+}
+
+function copyText(text, btn) {
+  const done = () => { btn.textContent = "copied"; btn.classList.add("done"); setTimeout(() => { btn.textContent = "copy"; btn.classList.remove("done"); }, 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); done(); } catch (e) {} finally { ta.remove(); }
 }
 
 function esc(s) { return String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
