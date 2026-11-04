@@ -112,6 +112,17 @@ Save the key as the only content of `config/openalex_key.txt` (gitignored)
 or export it as `OPENALEX_API_KEY`, then rerun `06_pull_openalex.py` and
 `08_merge_all.py`. Without a key the co-author route is skipped.
 
+## Interactive explorer
+
+`scripts/09_build_explorer.py` writes `industry-funders-explorer.html`, a
+single self-contained page (about 11 MB) that opens directly in a browser
+with no server. It filters by company name or alias, university worked
+with, project text, year range (scores are recomputed for the range),
+company country, organisation type, theme, scheme or funder, evidence
+types counted, North West address and prior work with Manchester
+Metropolitan. Each row expands to list the evidence, and the filtered
+list downloads as CSV. The page is rebuilt by `run_all.sh`.
+
 ## How scope is decided
 
 Scope is inclusion-first so that nothing in the School's remit is dropped

@@ -112,7 +112,8 @@ def main():
             rows.append({
                 "source": "gtr", "company_name": name, "company_crn": (o or {}).get("reg"),
                 "company_size": None, "org_type": "company", "company_postcode": (o or {}).get("postcode"),
-                "company_region": (o or {}).get("region"), "company_is_lead": False,
+                "company_region": (o or {}).get("region"), "company_country": (o or {}).get("country"),
+                "company_is_lead": False,
                 "company_role": role, "university": lead_o.get("name"),
                 "project_id": p["id"], "grant_reference": gref,
                 "project_title": p.get("title"), "scheme": funder,

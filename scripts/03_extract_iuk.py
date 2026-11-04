@@ -52,6 +52,7 @@ def main():
             lambda z: "public_or_rto" if z in ("RTO", "Catapult", "PSO", "PSRE", "Charity", "Academic") else "company"),
         "company_postcode": rows["Postcode"],
         "company_region": rows["Address Region"],
+        "company_country": rows["Enterprise Size"].astype(str).str.strip().map(lambda z: "" if z == "Non UK" else "United Kingdom"),
         "company_is_lead": rows["Is Lead Participant"].eq("Yes"),
         "university": rows["university"],
         "project_id": rows["Project Number"].astype(str),

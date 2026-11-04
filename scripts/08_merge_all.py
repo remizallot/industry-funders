@@ -89,6 +89,9 @@ def main():
     crn = crn[crn["company_crn"].str.strip().ne("") & crn["company_crn"].str.strip().ne("nan")]
     name_to_crn = crn.groupby("name_key")["company_crn"].agg(lambda s: s.value_counts().index[0]).to_dict()
     ev["company_key"] = ev["name_key"].map(name_to_crn).fillna(ev["name_key"])
+    ev["company_country"] = ev.get("company_country").replace({"GB": "United Kingdom", "UK": "United Kingdom"})
+    cc = ev["company_country"]
+    ev.loc[cc.isna() & ev["company_postcode"].astype(str).str.match(r"^[A-Z]{1,2}\d"), "company_country"] = "United Kingdom"
     ev["north_west"] = ev["company_postcode"].map(nw) | ev["company_region"].astype(str).str.contains("North West", case=False)
 
     this_year = pd.Timestamp.today().year
@@ -108,6 +111,7 @@ def main():
         "aliases": g["company_name"].agg(lambda s: "; ".join(sorted(set(s))[:6])),
         "crn": g["company_crn"].agg(lambda s: next((x for x in s if isinstance(x, str) and x not in ("", "nan")), "")),
         "org_type": g["org_type"].agg(lambda s: "public_or_rto" if (s == "public_or_rto").any() else "company"),
+        "country": g["company_country"].agg(lambda s: s.dropna().replace("", pd.NA).dropna().value_counts().index[0] if s.dropna().replace("", pd.NA).dropna().size else ""),
         "size": g["company_size"].agg(lambda s: next((x for x in s if isinstance(x, str) and x not in ("", "nan")), "")),
         "score": g["points"].sum().round(1),
         "n_studentships": g["evidence_type"].agg(lambda s: (s == "studentship").sum()),
@@ -147,6 +151,8 @@ def main():
         by_theme.to_excel(xw, "by_theme", index=False)
         ev_out.to_excel(xw, "evidence", index=False)
     master.to_csv("data/processed/master.csv", index=False)
+    ev[["company_key", "org_type", "north_west", "company_country"] + [c for c in cols if c in ev.columns] + ["points"]].to_csv(
+        "data/processed/evidence.csv", index=False)
     print(f"companies {len(master)}, evidence rows {len(ev)}; top 15:", file=sys.stderr)
     print(master.head(15)[["rank", "company", "score", "n_studentships", "n_ktp", "n_research_grants", "n_scheme_partner", "papers_funded", "papers_coauthored"]].to_string(index=False), file=sys.stderr)
 

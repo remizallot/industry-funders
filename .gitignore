@@ -6,3 +6,4 @@ config/openalex_key.txt
 industry-funders-ranked.xlsx
 *.xlsx
 .DS_Store
+industry-funders-explorer.html
