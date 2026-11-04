@@ -48,9 +48,12 @@ def main():
     key_pos = {}
     for i, r in enumerate(master.itertuples(index=False)):
         key_pos[r.key] = i
+        labels = [THEMES[k]["label"] for k in THEME_KEYS]
+        primary = labels.index(r.primary_theme) if isinstance(r.primary_theme, str) and r.primary_theme in labels else -1
         companies.append([r.company, r.org_type, ISO.get(r.country, r.country) if isinstance(r.country, str) else "",
                           int(bool(r.north_west)), int(bool(r.worked_with_mmu)),
-                          r.size if isinstance(r.size, str) else "", r.aliases if isinstance(r.aliases, str) else ""])
+                          r.size if isinstance(r.size, str) else "", r.aliases if isinstance(r.aliases, str) else "",
+                          primary, r.theme_profile if isinstance(r.theme_profile, str) else ""])
     rows = []
     for r in ev.itertuples(index=False):
         ci = key_pos.get(r.company_key)
@@ -62,11 +65,14 @@ def main():
                      uni_idx.get(r.university, -1), title[:100],
                      scheme_idx.get(r.scheme, -1) if isinstance(r.scheme, str) else -1,
                      round(float(r.points), 3) if pd.notna(r.points) else 0,
-                     theme_mask(r.themes), int(r.n_papers) if pd.notna(r.n_papers) else 0])
+                     theme_mask(r.themes), int(r.n_papers) if pd.notna(r.n_papers) else 0,
+                     (r.theme_justification if isinstance(r.theme_justification, str) else "")[:200]
+                     if hasattr(r, "theme_justification") else ""])
     payload = {"companies": companies, "rows": rows, "unis": unis, "schemes": schemes,
                "themes": [THEMES[k]["label"] for k in THEME_KEYS],
                "types": {v: k.replace("_", " ") for k, v in TYPE_CODES.items()},
                "built": pd.Timestamp.today().strftime("%d %B %Y"),
+               "theme_methods": (ev["theme_method"].value_counts().to_dict() if "theme_method" in ev.columns else {}),
                "pdf": base64.b64encode(open("industry-funders-plan.pdf", "rb").read()).decode()
                if os.path.exists("industry-funders-plan.pdf") else ""}
     tpl = open("scripts/explorer_template.html").read()

@@ -11,11 +11,39 @@ CFG = yaml.safe_load(open("config/themes.yml"))
 THEMES = CFG["themes"]
 ACAD = re.compile("|".join(CFG["academic_patterns"]), re.I)
 ALWAYS = set(CFG["innovate_uk_sectors_always"])
+def split_alts(pattern):
+    """Split a regex on top-level '|' only (not inside parentheses)."""
+    out, depth, cur = [], 0, ""
+    for ch in pattern:
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        if ch == "|" and depth == 0:
+            out.append(cur); cur = ""
+        else:
+            cur += ch
+    out.append(cur)
+    return out
+
+
 KW = {k: re.compile("|".join(v["keywords"]), re.I) for k, v in THEMES.items()}
+KW_ALTS = {k: [re.compile(alt, re.I) for pat in v["keywords"] for alt in split_alts(pat)] for k, v in THEMES.items()}
 
 
 def theme_tags(text):
     return [k for k, rx in KW.items() if rx.search(text or "")]
+
+
+def theme_tags_two_hits(title, desc):
+    """Title match, or at least two distinct keywords in the description."""
+    out = []
+    for k, rx in KW.items():
+        if rx.search(title or ""):
+            out.append(k)
+        elif rx.search(desc or "") and sum(1 for a in KW_ALTS[k] if a.search(desc)) >= 2:
+            out.append(k)
+    return out
 
 
 def main():
@@ -26,7 +54,7 @@ def main():
     df["is_academic"] = (df["Enterprise Size"].astype(str).str.strip().eq("Academic")
                          | df["Participant Name"].str.contains(ACAD))
     df["text"] = df["Project Title"].fillna("") + " " + df["Public Description"].fillna("")
-    df["themes"] = df["text"].map(theme_tags)
+    df["themes"] = [theme_tags_two_hits(t, d) for t, d in zip(df["Project Title"].fillna(""), df["Public Description"].fillna(""))]
     df["title_themes"] = df["Project Title"].fillna("").map(theme_tags)
     df["in_scope"] = df["Sector"].isin(ALWAYS) | df["themes"].map(bool)
 
@@ -49,7 +77,8 @@ def main():
         "company_crn": rows["CRN"].astype("string").str.strip(),
         "company_size": rows["Enterprise Size"],
         "org_type": rows["Enterprise Size"].astype(str).str.strip().map(
-            lambda z: "public_or_rto" if z in ("RTO", "Catapult", "PSO", "PSRE", "Charity", "Academic") else "company"),
+            lambda z: {"RTO": "public_or_rto", "Catapult": "public_or_rto", "PSO": "public_research", "PSRE": "public_research",
+                       "Charity": "charity", "Academic": "public_research"}.get(z, "company")),
         "company_postcode": rows["Postcode"],
         "company_region": rows["Address Region"],
         "company_country": rows["Enterprise Size"].astype(str).str.strip().map(lambda z: "" if z == "Non UK" else "United Kingdom"),

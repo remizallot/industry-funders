@@ -5,3 +5,4 @@ pyyaml>=6.0
 beautifulsoup4>=4.12
 lxml>=5.0
 odfpy>=1.4
+numpy>=1.24

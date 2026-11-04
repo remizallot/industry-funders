@@ -13,6 +13,12 @@ CFG = yaml.safe_load(open("config/themes.yml"))
 LABELS = {k: v["label"] for k, v in CFG["themes"].items()}
 ACAD = re.compile("|".join(CFG["academic_patterns"]), re.I)
 RTO = re.compile("|".join(CFG.get("rto_patterns", [])), re.I)
+PUBRES = re.compile("|".join(CFG.get("public_research_patterns", [])), re.I)
+CHARITY = re.compile("|".join(CFG.get("charity_patterns", [])), re.I)
+ORG_TYPE_ORDER = ["company", "public_or_rto", "public_research", "charity"]
+OA_CFG = yaml.safe_load(open("config/openalex_subfields.yml"))
+SUBFIELD_THEME = {OA_CFG["subfields"][sid]: theme for theme, ids in OA_CFG["subfield_themes"].items() for sid in ids}
+THEME_SHARE_MIN = 0.2  # a theme is listed for a company when at least this share of its evidence rows carry it
 ALIASES = {str(k).upper(): str(v).upper() for k, v in (yaml.safe_load(open("config/aliases.yml")) or {}).items()}
 ISO = {"GB": "United Kingdom", "US": "United States", "DE": "Germany", "FR": "France", "CH": "Switzerland", "NL": "Netherlands",
        "BE": "Belgium", "DK": "Denmark", "SE": "Sweden", "NO": "Norway", "FI": "Finland", "IE": "Ireland", "ES": "Spain",
@@ -51,6 +57,29 @@ def evidence_type(r):
     return "research_grant"
 
 
+def theme_profile(themes):
+    """Share of a company's evidence rows carrying each theme.
+
+    Returns (primary theme label, labels above THEME_SHARE_MIN, profile string).
+    Rows with no theme count in the denominator, so a company whose work is
+    mostly outside the School's themes shows low shares.
+    """
+    rows = [str(x) if isinstance(x, str) else "" for x in themes]
+    n = len(rows)
+    counts = {}
+    for r in rows:
+        for t in r.split(";"):
+            if t:
+                counts[t] = counts.get(t, 0) + 1
+    if not counts:
+        return "", "", ""
+    ranked = sorted(counts.items(), key=lambda kv: -kv[1])
+    primary = LABELS.get(ranked[0][0], ranked[0][0])
+    listed = "; ".join(LABELS.get(t, t) for t, c in ranked if c / n >= THEME_SHARE_MIN)
+    profile = "; ".join(f"{LABELS.get(t, t)} {round(100 * c / n)}%" for t, c in ranked[:4])
+    return primary, listed or primary, profile
+
+
 def nw(pc):
     pc = str(pc or "").upper().strip()
     m = re.match(r"([A-Z]{1,2})\d", pc)
@@ -78,9 +107,31 @@ def main():
                                        "scheme": sc["source"], "grant_category": "scheme_partner",
                                        "project_id": sc["url"], "org_type": "company"}))
     ev = pd.concat(parts, ignore_index=True)
+    ev["theme_method"] = "keywords"
+    ev["theme_justification"] = ""
+    if os.path.exists("data/processed/project_themes.csv"):
+        pt = pd.read_csv("data/processed/project_themes.csv", dtype={"project_id": str})
+        pt["themes_llm"] = [("" if o else ";".join([p] + [x for x in str(sc).split(";") if x and x != "nan"]))
+                            for p, sc, o in zip(pt["primary_theme"], pt["secondary_themes"].fillna(""), pt["outside_scope"])]
+        key = ev["source"].astype(str) + "|" + ev["project_id"].astype(str)
+        lookup = dict(zip(pt["source"] + "|" + pt["project_id"], zip(pt["themes_llm"], pt["method"], pt["justification"].fillna(""))))
+        hit = key.map(lookup)
+        m = hit.notna()
+        ev.loc[m, "themes"] = hit[m].map(lambda t: t[0])
+        ev.loc[m, "theme_method"] = hit[m].map(lambda t: t[1])
+        ev.loc[m, "theme_justification"] = hit[m].map(lambda t: t[2])
+        print(f"project themes from model: {int(m.sum())} rows ({pt['method'].value_counts().to_dict()})", file=sys.stderr)
+    oa = ev["source"].eq("openalex")
+    ev.loc[oa, "themes"] = ev.loc[oa, "subfields"].fillna("").map(
+        lambda sfs: ";".join(sorted({SUBFIELD_THEME[x.strip()] for x in sfs.split(";") if x.strip() in SUBFIELD_THEME})))
     before = len(ev)
     ev = ev[~ev["company_name"].astype(str).str.contains(ACAD)]
-    ev.loc[ev["company_name"].astype(str).str.contains(RTO), "org_type"] = "public_or_rto"
+    names = ev["company_name"].astype(str)
+    ev["org_type"] = ev["org_type"].where(ev["org_type"].isin(ORG_TYPE_ORDER), "company")
+    ev.loc[names.str.contains(CHARITY), "org_type"] = "charity"
+    ev.loc[names.str.contains(PUBRES), "org_type"] = "public_research"
+    ev.loc[names.str.contains(RTO), "org_type"] = "public_or_rto"
+    print(ev.drop_duplicates("company_name").groupby("org_type").size().to_string(), file=sys.stderr)
     print(f"dropped {before - len(ev)} rows naming academic or public bodies", file=sys.stderr)
     ev["n_papers"] = pd.to_numeric(ev.get("n_papers"), errors="coerce")
     ev["is_ktp"] = ev["is_ktp"].astype(str).str.lower().eq("true")
@@ -116,7 +167,7 @@ def main():
         "company": g["company_name"].agg(lambda s: s.value_counts().index[0]),
         "aliases": g["company_name"].agg(lambda s: "; ".join(sorted(set(s))[:6])),
         "crn": g["company_crn"].agg(lambda s: next((x for x in s if isinstance(x, str) and x not in ("", "nan")), "")),
-        "org_type": g["org_type"].agg(lambda s: "public_or_rto" if (s == "public_or_rto").any() else "company"),
+        "org_type": g["org_type"].agg(lambda s: next((t for t in ("public_or_rto", "public_research", "charity") if (s == t).any()), "company")),
         "country": g["company_country"].agg(lambda s: s.dropna().replace("", pd.NA).dropna().value_counts().index[0] if s.dropna().replace("", pd.NA).dropna().size else ""),
         "size": g["company_size"].agg(lambda s: next((x for x in s if isinstance(x, str) and x not in ("", "nan")), "")),
         "score": g["points"].sum().round(1),
@@ -133,10 +184,13 @@ def main():
         "worked_with_mmu": g["university"].agg(lambda s: s.astype(str).str.contains("Manchester Metropolitan", case=False).any()),
         "first_year": g["year"].min(), "last_year": g["year"].max(),
         "north_west": g["north_west"].any(),
-        "themes": g["themes"].agg(lambda s: "; ".join(sorted({LABELS.get(t, t) for x in s.dropna() for t in str(x).split(";") if t}))),
+        "primary_theme": g["themes"].agg(lambda s: theme_profile(s)[0]),
+        "themes": g["themes"].agg(lambda s: theme_profile(s)[1]),
+        "theme_profile": g["themes"].agg(lambda s: theme_profile(s)[2]),
         "example_projects": g["project_title"].agg(lambda s: " | ".join(s.dropna().astype(str).head(3).str.slice(0, 90))),
     }).sort_values("score", ascending=False).reset_index(drop=True)
     master.insert(0, "rank", master.index + 1)
+    master.insert(1, "rank_in_type", master.groupby("org_type").cumcount() + 1)
 
     theme_rows = []
     for k, label in LABELS.items():
@@ -162,7 +216,9 @@ def main():
         "OpenAlex (corporate funders and company co-authors of UK university papers), published lists of named partnership schemes.",
         "Scoring: studentship 3, fellowship 2, KTP 2, named partnership 2, research grant 1, other Innovate UK project 0.5, scaled by recency; "
         "papers funded 0.15 and co-authored 0.05 each, capped per company. Companies keyed on Companies House number where known.",
-        "org_type = public_or_rto marks research and technology organisations, catapults and similar; filter on company for the target list.",
+        "org_type: company; public_or_rto (research and technology organisations, catapults); public_research (research institutes, "
+        "national facilities, government agencies, international research organisations and funders); charity (charities, foundations, "
+        "learned societies). Filter on company for the target list; the other types are co-funders worth knowing.",
         "Suggested citation: Zallot R. (2026). Industry funders of biological and chemical sciences research at UK universities: an evidence-based target list. "
         "Manchester Metropolitan University. https://github.com/remizallot/industry-funders",
     ]})
@@ -172,7 +228,7 @@ def main():
         by_theme.to_excel(xw, "by_theme", index=False)
         ev_out.to_excel(xw, "evidence", index=False)
     master.to_csv("data/processed/master.csv", index=False)
-    ev[["company_key", "org_type", "north_west", "company_country"] + [c for c in cols if c in ev.columns] + ["points"]].to_csv(
+    ev[["company_key", "org_type", "north_west", "company_country"] + [c for c in cols if c in ev.columns] + ["points", "theme_method", "theme_justification"]].to_csv(
         "data/processed/evidence.csv", index=False)
     print(f"companies {len(master)}, evidence rows {len(ev)}; top 15:", file=sys.stderr)
     print(master.head(15)[["rank", "company", "score", "n_studentships", "n_ktp", "n_research_grants", "n_scheme_partner", "papers_funded", "papers_coauthored"]].to_string(index=False), file=sys.stderr)

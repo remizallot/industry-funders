@@ -71,8 +71,8 @@
   <div class="f"><label>Project or paper text</label><input type="text" id="txt" placeholder="e.g. enzyme, fuel cell"></div>
   <div class="f"><label>Years (evidence dated)</label><div class="range"><input type="number" id="y0" min="2004" max="2027"> <span>to</span> <input type="number" id="y1" min="2004" max="2027"></div></div>
   <div class="f"><label>Company country</label><select id="country"><option value="">Any</option></select></div>
-  <div class="f"><label>Organisation type</label><select id="otype"><option value="company">Companies only</option><option value="">Companies and RTOs</option><option value="public_or_rto">RTOs and public bodies only</option></select></div>
-  <div class="f"><label>Theme (any evidence in theme)</label><select id="theme"><option value="">Any</option></select></div>
+  <div class="f"><label>Organisation type</label><select id="otype"><option value="company">Companies only</option><option value="company,public_or_rto">Companies and RTOs</option><option value="public_research">Public research organisations and funders</option><option value="charity">Charities and foundations</option><option value="public_or_rto">RTOs and catapults</option><option value="">All organisations</option></select></div>
+  <div class="f"><label>Theme</label><div class="range"><select id="theme"><option value="">Any</option></select><select id="tmode" title="Primary: the theme carrying most of the company's evidence. Any: at least one evidence row in the theme."><option value="primary">primary</option><option value="any">any evidence</option></select></div></div>
   <div class="f"><label>Scheme or funder</label><select id="scheme"><option value="">Any</option></select></div>
   <div class="f"><label>Evidence types counted</label><div class="checks" id="types"></div></div>
   <div class="f"><label>Flags</label><div class="checks">
@@ -99,6 +99,7 @@
     <th data-k="nuni" class="num hide">Univ.</th>
     <th data-k="years" class="hide">Years</th>
     <th data-k="country" class="hide">Country</th>
+    <th data-k="ptheme" class="hide">Primary theme</th>
   </tr></thead>
   <tbody id="tb"></tbody>
 </table>
@@ -119,6 +120,7 @@
       <tr><td>Named scheme pages</td><td>Published lists of industry-academic partnerships: EPSRC and BBSRC Prosperity Partnerships, Royal Academy of Engineering Research Chairs and Industrial Fellowships, Royal Commission for 1851 Industrial Fellowships, UK Research Partnership Investment Fund, and the industrial-partner pages of bioscience Doctoral Training Partnerships.</td><td><span class="tag P">P</span>named partnership</td></tr>
     </tbody>
   </table>
+  <p>Organisations are classed by name into companies, research and technology organisations (RTOs and catapults), public research organisations and funders (research institutes, national facilities, government agencies, international bodies such as CSIRO, RIKEN or CERN) and charities and foundations. Universities, NHS bodies, research councils and local government are removed from the partner side. The default view lists companies only; the organisation-type filter switches to the co-funder lists.</p>
   <p>Not used: HMRC research and development tax relief data (confidential, aggregate statistics only), studentship advert sites (terms of use forbid scraping), and paid aggregators. BBSRC Collaborative Training Partnership pages are no longer online and the Royal Society publishes no Industry Fellowship awardee list, so those two schemes are missing.</p>
 
   <h2>Pipeline</h2>
@@ -184,7 +186,7 @@
     <li>GtR records partner contributions as declared at award, not what was paid, and block doctoral training grants list the grant rather than every industrial student.</li>
     <li>Innovate UK data shows that a company and a university were on the same project, not that a student or researcher was funded.</li>
     <li>Company name matching is imperfect: subsidiaries and spelling variants can split one company into several rows. The aliases are shown when a row is expanded.</li>
-    <li>Themes are tagged by keyword and are broad; large companies match every theme.</li>
+    <li>Themes are assigned by rule (UKRI classifications, OpenAlex subfields, title and abstract keywords), not by reading each project; the primary theme and profile shown for a company are shares of its evidence rows and should be read as indicative.</li>
     <li>Directly negotiated studentships that were never advertised and never produced an acknowledged paper are invisible to public data.</li>
   </ul>
 
@@ -203,6 +205,7 @@ const DIRECT = new Set(["S","F","K","P"]);
 const $ = id => document.getElementById(id);
 document.getElementById("built").textContent = D.built;
 document.querySelectorAll(".built, #built2").forEach(e => e.textContent = D.built);
+if (D.theme_methods) document.getElementById("tm").textContent = "This build: " + Object.entries(D.theme_methods).map(([k, v]) => `${v.toLocaleString()} rows by ${k}`).join(", ") + ".";
 if (D.pdf) document.getElementById("pdf").href = "data:application/pdf;base64," + D.pdf;
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
@@ -240,11 +243,12 @@ function compute() {
   const nw = $("nw").checked, mmu = $("mmu").checked, direct = $("direct").checked;
   result = [];
   D.companies.forEach((c, ci) => {
-    if (otype && c[1] !== otype) return;
+    if (otype && !otype.split(",").includes(c[1])) return;
     if (country && c[2] !== country) return;
     if (nw && !c[3]) return;
     if (mmu && !c[4]) return;
     if (q && !(c[0].toLowerCase().includes(q) || c[6].toLowerCase().includes(q))) return;
+    if (theme >= 0 && $("tmode").value === "primary" && c[7] !== theme) return;
     const counts = {S:0,F:0,K:0,P:0,G:0,I:0,A:0,C:0}, pts = {A:0, C:0};
     let score = 0, unis = new Set(), lo = 9999, hi = 0, hitUni = !uq, hitTxt = !tq, hitTheme = theme < 0, hitScheme = scheme < 0, rowsKept = [];
     for (const i of byCo[ci]) {
@@ -266,7 +270,7 @@ function compute() {
     if (!rowsKept.length || !hitUni || !hitTxt || !hitTheme || !hitScheme) return;
     if (direct && !(counts.S || counts.F || counts.K || counts.P)) return;
     score += Math.min(pts.A, CAP.A) + Math.min(pts.C, CAP.C);
-    result.push({ci, name: c[0], country: c[2], score, ...counts, nuni: unis.size, years: lo <= hi ? `${lo}–${hi}` : "", rows: rowsKept, otype: c[1]});
+    result.push({ci, name: c[0], country: c[2], score, ...counts, nuni: unis.size, years: lo <= hi ? `${lo}–${hi}` : "", rows: rowsKept, otype: c[1], ptheme: c[7] >= 0 ? D.themes[c[7]] : ""});
   });
   sortAndRender();
 }
@@ -289,9 +293,9 @@ function render() {
   const frag = document.createDocumentFragment();
   result.slice(0, shown).forEach(r => {
     const tr = document.createElement("tr"); tr.className = "co"; tr.dataset.ci = r.ci;
-    tr.innerHTML = `<td class="num">${r.rank}</td><td><span class="name">${esc(r.name)}</span><button class="act copy" title="Copy the company name">copy</button><a class="act" href="https://www.google.com/search?q=${encodeURIComponent(r.name)}" target="_blank" rel="noopener" title="Search the web for this company">search</a>${r.otype !== "company" ? ' <span class="chip">RTO / public</span>' : ""}${D.companies[r.ci][3] ? ' <span class="chip">North West</span>' : ""}${D.companies[r.ci][4] ? ' <span class="chip">Manchester Met</span>' : ""}</td>
+    tr.innerHTML = `<td class="num">${r.rank}</td><td><span class="name">${esc(r.name)}</span><button class="act copy" title="Copy the company name">copy</button><a class="act" href="https://www.google.com/search?q=${encodeURIComponent(r.name)}" target="_blank" rel="noopener" title="Search the web for this company">search</a>${r.otype !== "company" ? ` <span class="chip">${({public_or_rto: "RTO", public_research: "public research", charity: "charity"})[r.otype] || r.otype}</span>` : ""}${D.companies[r.ci][3] ? ' <span class="chip">North West</span>' : ""}${D.companies[r.ci][4] ? ' <span class="chip">Manchester Met</span>' : ""}</td>
       <td class="num">${r.score.toFixed(1)}</td><td class="num">${r.S||""}</td><td class="num">${r.F||""}</td><td class="num">${r.K||""}</td><td class="num">${r.P||""}</td><td class="num">${r.G||""}</td>
-      <td class="num hide">${r.I||""}</td><td class="num hide">${r.A||""}</td><td class="num hide">${r.C||""}</td><td class="num hide">${r.nuni}</td><td class="hide">${r.years}</td><td class="hide">${esc(r.country)}</td>`;
+      <td class="num hide">${r.I||""}</td><td class="num hide">${r.A||""}</td><td class="num hide">${r.C||""}</td><td class="num hide">${r.nuni}</td><td class="hide">${r.years}</td><td class="hide">${esc(r.country)}</td><td class="hide">${esc(r.ptheme)}</td>`;
     tr.addEventListener("click", e => { if (!e.target.closest(".act")) toggle(tr, r); });
     tr.querySelector(".copy").addEventListener("click", e => { e.stopPropagation(); copyText(r.name, e.target); });
     tr.querySelector("a.act").addEventListener("click", e => e.stopPropagation());
@@ -307,8 +311,8 @@ function toggle(tr, r) {
   const ev = document.createElement("tr"); ev.className = "ev";
   const c = D.companies[r.ci];
   const rows = r.rows.map(i => D.rows[i]).sort((a, b) => b[2] - a[2]);
-  const list = rows.slice(0, 400).map(x => `<div><span class="tag ${x[1]}">${x[1]}</span><span class="muted">${x[2] || "n.d."}</span> · ${esc(x[3] >= 0 ? D.unis[x[3]] : "")} · ${esc(x[4])}${x[5] >= 0 ? ` <span class="muted">(${esc(D.schemes[x[5]])})</span>` : ""}</div>`).join("");
-  ev.innerHTML = `<td colspan="14"><div class="small">${esc(c[6])}${c[5] ? " · size: " + esc(c[5]) : ""}${c[2] ? " · " + esc(c[2]) : ""}</div><div class="evlist">${list}${rows.length > 400 ? `<div class="muted">and ${rows.length - 400} more</div>` : ""}</div></td>`;
+  const list = rows.slice(0, 400).map(x => `<div><span class="tag ${x[1]}">${x[1]}</span><span class="muted">${x[2] || "n.d."}</span> · ${esc(x[3] >= 0 ? D.unis[x[3]] : "")} · ${esc(x[4])}${x[5] >= 0 ? ` <span class="muted">(${esc(D.schemes[x[5]])})</span>` : ""}${x[7] ? ` <span class="chip">${themeNames(x[7])}</span>` : ""}${x[9] ? `<div class="small" style="margin-left:26px">why: ${esc(x[9])}</div>` : ""}</div>`).join("");
+  ev.innerHTML = `<td colspan="15"><div class="small">${esc(c[6])}${c[5] ? " · size: " + esc(c[5]) : ""}${c[2] ? " · " + esc(c[2]) : ""}${c[8] ? "<br>Theme profile: " + esc(c[8]) : ""}</div><div class="evlist">${list}${rows.length > 400 ? `<div class="muted">and ${rows.length - 400} more</div>` : ""}</div></td>`;
   tr.after(ev);
 }
 
@@ -324,6 +328,8 @@ function fallbackCopy(text, done) {
   try { document.execCommand("copy"); done(); } catch (e) {} finally { ta.remove(); }
 }
 
+function themeNames(mask) { return D.themes.filter((t, i) => mask & (1 << i)).map(t => t.split(" ")[0].replace(",", "")).join(", "); }
+
 function esc(s) { return String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
 
 document.querySelectorAll("th[data-k]").forEach(th => th.addEventListener("click", () => {
@@ -331,13 +337,13 @@ document.querySelectorAll("th[data-k]").forEach(th => th.addEventListener("click
   if (sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = (k === "name" || k === "country" || k === "years") ? 1 : -1; }
   sortAndRender();
 }));
-["q","uni","txt","y0","y1","country","otype","theme","scheme","nw","mmu","direct"].forEach(id => $(id).addEventListener("input", compute));
+["q","uni","txt","y0","y1","country","otype","theme","tmode","scheme","nw","mmu","direct"].forEach(id => $(id).addEventListener("input", compute));
 $("types").addEventListener("change", compute);
 $("more").addEventListener("click", () => { shown += 200; render(); });
 $("reset").addEventListener("click", () => { ["q","uni","txt"].forEach(id => $(id).value = ""); $("y0").value = ymin; $("y1").value = ymax; ["country","theme","scheme"].forEach(id => $(id).value = ""); $("otype").value = "company"; ["nw","mmu","direct"].forEach(id => $(id).checked = false); document.querySelectorAll("#types input").forEach(i => i.checked = true); compute(); });
 $("csv").addEventListener("click", () => {
-  const head = ["rank","company","country","score","studentships","fellowships","ktp","scheme_partnerships","research_grants","innovate_uk","papers_funded","papers_coauthored","universities","years"];
-  const lines = [head.join(",")].concat(result.map(r => [r.rank, r.name, r.country, r.score.toFixed(1), r.S, r.F, r.K, r.P, r.G, r.I, r.A, r.C, r.nuni, r.years].map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")));
+  const head = ["rank","company","country","primary_theme","score","studentships","fellowships","ktp","scheme_partnerships","research_grants","innovate_uk","papers_funded","papers_coauthored","universities","years"];
+  const lines = [head.join(",")].concat(result.map(r => [r.rank, r.name, r.country, r.ptheme, r.score.toFixed(1), r.S, r.F, r.K, r.P, r.G, r.I, r.A, r.C, r.nuni, r.years].map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")));
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([lines.join("\n")], {type: "text/csv"})); a.download = "industry-funders-filtered.csv"; a.click();
 });
 compute();

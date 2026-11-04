@@ -15,7 +15,25 @@ THEMES = CFG["themes"]
 ACAD = re.compile("|".join(CFG["academic_patterns"]), re.I)
 FUNDERS_ALWAYS = set(CFG["gtr_funders_always"])
 FUNDERS_SUBJECT_ONLY = set(CFG["gtr_funders_subject_only"])
+def split_alts(pattern):
+    """Split a regex on top-level '|' only (not inside parentheses)."""
+    out, depth, cur = [], 0, ""
+    for ch in pattern:
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        if ch == "|" and depth == 0:
+            out.append(cur); cur = ""
+        else:
+            cur += ch
+    out.append(cur)
+    return out
+
+
 KW = {k: re.compile("|".join(v["keywords"]), re.I) for k, v in THEMES.items()}
+KW_ALTS = {k: [re.compile(alt, re.I) for pat in v["keywords"] for alt in split_alts(pat)] for k, v in THEMES.items()}
+MIN_ABSTRACT_HITS = 2  # distinct keywords needed for an abstract-only match
 SUBJ = {k: set(v["ukri_subjects"]) for k, v in THEMES.items()}
 TOPIC = {k: re.compile("|".join(v["ukri_topics"]), re.I) if v["ukri_topics"] else None
          for k, v in THEMES.items()}
@@ -35,10 +53,12 @@ def read_jsonl(path):
 
 
 def classify(p):
-    """Return (strong tags, all tags, subjects, topics).
+    """Return (classified, strong, all tags, subjects, topics).
 
-    Strong tags come from UKRI subjects, topics or the title and decide scope;
-    all tags add abstract matches and are recorded as themes.
+    classified: themes from UKRI subjects or topics.
+    strong:     classified plus title keyword matches; decides scope.
+    all tags:   strong plus abstracts with at least MIN_ABSTRACT_HITS
+                distinct keywords; recorded as themes.
     """
     strong, weak, classified = set(), set(), set()
     subjects = [s["text"] for s in p.get("researchSubjects", {}).get("researchSubject", []) or []]
@@ -51,7 +71,9 @@ def classify(p):
         if KW[k].search(title):
             strong.add(k)
         elif KW[k].search(abstract):
-            weak.add(k)
+            hits = sum(1 for rx in KW_ALTS[k] if rx.search(abstract))
+            if hits >= MIN_ABSTRACT_HITS:
+                weak.add(k)
     return classified, strong | classified, strong | weak | classified, subjects, topics
 
 

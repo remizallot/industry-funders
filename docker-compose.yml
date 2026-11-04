@@ -1,0 +1,35 @@
+# Runs the pipeline and a local language-model server (Ollama) together.
+#   docker compose up -d ollama            start the model server (keeps models in a volume)
+#   docker compose run --rm pipeline ...   run any pipeline script against it
+# On a Mac, Docker cannot use the Apple GPU, so models run on the CPU; the
+# embedding model is fast regardless, the chat model is slower (see README).
+services:
+  ollama:
+    image: ollama/ollama:0.6.8
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  pipeline:
+    build: .
+    volumes:
+      - ./data:/work/data
+      - ./config:/work/config
+      - ./scripts:/work/scripts
+      - ./industry-funders-plan.pdf:/work/industry-funders-plan.pdf:ro
+    working_dir: /work
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OPENALEX_API_KEY: ${OPENALEX_API_KEY:-}
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+volumes:
+  ollama_models:

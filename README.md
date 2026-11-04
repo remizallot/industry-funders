@@ -76,41 +76,78 @@ Shapes follow the ISO 5807 flowchart convention: parallelograms are inputs,
 rectangles are processes, cylinders are stored data, and the final boxes are
 deliverables.
 
-## Running
+## Running it yourself
 
-With Docker:
+Everything runs from this folder with Docker Desktop and nothing else
+installed. The steps below are written for a rerun at a later date by
+someone who has not used the pipeline before.
+
+**One-time setup**
+
+1. Install Docker Desktop (docker.com) and start it.
+2. Clone the repository:
 
 ```bash
-docker build -t industry-funders .
+git clone git@github.com:remizallot/industry-funders.git
 ```
+
+3. Optional but recommended: a free OpenAlex API key from
+   openalex.org/settings/api, saved as the only content of
+   `config/openalex_key.txt`. Without it the company co-author route is
+   skipped and the funder route shares a small daily request budget.
+
+**Rebuild everything from current public data (about an hour)**
 
 ```bash
-docker run --rm -v "$PWD/data:/work/data" industry-funders
+bash scripts/run_in_docker.sh
 ```
 
-Without Docker:
+This downloads the Innovate UK spreadsheets, pages through the whole
+Gateway to Research catalogue (the slow part, resumable if interrupted),
+queries OpenAlex, scrapes the scheme pages, merges, scores and writes
+`industry-funders-ranked.xlsx` and `industry-funders-explorer.html` in this
+folder. Rerunning only the later steps is possible with
+`docker compose run --rm --no-deps pipeline python scripts/08_merge_all.py`
+and so on; each script is independent and reads the files of the one
+before it.
+
+**Optional: theme classification with a local language model (hours)**
+
+```bash
+bash scripts/run_llm_themes.sh
+```
+
+This starts a model server (Ollama) in Docker, downloads two small open
+models on first use (an embedding model, about 0.3 GB, and a 3-billion
+parameter chat model, about 2 GB), classifies every project behind the
+evidence, then rebuilds the workbook and explorer. The embedding pass takes
+minutes; the chat-model pass runs on the CPU inside Docker and takes a few
+seconds per project, so by default it is limited to 3,000 projects per run,
+prioritising projects behind studentships, fellowships, KTPs and named
+partnerships. Every answer is cached, so running the script again continues
+where it stopped. `--max-llm 0` runs embeddings only; `--llm-model
+qwen2.5:7b` uses a larger, slower model. The classifier replaces the keyword
+themes for the projects it has seen and records a one-line justification per
+project, shown in the explorer as a "why" line.
+
+**Changing the scope**
+
+The subject scope is specific to the School of Biological and Chemical
+Sciences. For another school, edit the themes, keywords and UKRI subjects in
+`config/themes.yml`, the OpenAlex subfields in
+`config/openalex_subfields.yml`, and the Innovate UK sectors in
+`config/themes.yml`, then rerun from `03_extract_iuk.py` onwards.
+
+**Without Docker**
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
 
-```bash
-.venv/bin/python scripts/02_pull_gtr.py
-```
-
-then run the remaining scripts in order, or `bash scripts/run_all.sh`
-for the whole pipeline. The GtR pull fetches about 160,000 projects plus
-organisations and funds at 100 records per request with a short pause
-between requests, so allow an hour. It is resumable: rerunning continues
-from the last completed page recorded in `data/raw/gtr/*.progress`.
-
-OpenAlex shares a free daily request budget per network address. The
-puller caches every response, stops cleanly when the budget is exhausted
-and resumes from the cache on the next run; the company co-author route needs a
-free API key from openalex.org/settings/api, which also raises the budget.
-Save the key as the only content of `config/openalex_key.txt` (gitignored)
-or export it as `OPENALEX_API_KEY`, then rerun `06_pull_openalex.py` and
-`08_merge_all.py`. Without a key the co-author route is skipped.
+then `bash scripts/run_all.sh` with `python` on the PATH pointing at
+`.venv/bin/python`. The language-model stage needs an Ollama server
+reachable at `OLLAMA_HOST` (the native Ollama app on a Mac uses the GPU and
+is several times faster than the Docker service).
 
 ## Interactive explorer
 
