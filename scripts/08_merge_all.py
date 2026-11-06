@@ -107,20 +107,6 @@ def main():
                                        "scheme": sc["source"], "grant_category": "scheme_partner",
                                        "project_id": sc["url"], "org_type": "company"}))
     ev = pd.concat(parts, ignore_index=True)
-    ev["theme_method"] = "keywords"
-    ev["theme_justification"] = ""
-    if os.path.exists("data/processed/project_themes.csv"):
-        pt = pd.read_csv("data/processed/project_themes.csv", dtype={"project_id": str})
-        pt["themes_llm"] = [("" if o else ";".join([p] + [x for x in str(sc).split(";") if x and x != "nan"]))
-                            for p, sc, o in zip(pt["primary_theme"], pt["secondary_themes"].fillna(""), pt["outside_scope"])]
-        key = ev["source"].astype(str) + "|" + ev["project_id"].astype(str)
-        lookup = dict(zip(pt["source"] + "|" + pt["project_id"], zip(pt["themes_llm"], pt["method"], pt["justification"].fillna(""))))
-        hit = key.map(lookup)
-        m = hit.notna()
-        ev.loc[m, "themes"] = hit[m].map(lambda t: t[0])
-        ev.loc[m, "theme_method"] = hit[m].map(lambda t: t[1])
-        ev.loc[m, "theme_justification"] = hit[m].map(lambda t: t[2])
-        print(f"project themes from model: {int(m.sum())} rows ({pt['method'].value_counts().to_dict()})", file=sys.stderr)
     oa = ev["source"].eq("openalex")
     ev.loc[oa, "themes"] = ev.loc[oa, "subfields"].fillna("").map(
         lambda sfs: ";".join(sorted({SUBFIELD_THEME[x.strip()] for x in sfs.split(";") if x.strip() in SUBFIELD_THEME})))
@@ -228,7 +214,7 @@ def main():
         by_theme.to_excel(xw, "by_theme", index=False)
         ev_out.to_excel(xw, "evidence", index=False)
     master.to_csv("data/processed/master.csv", index=False)
-    ev[["company_key", "org_type", "north_west", "company_country"] + [c for c in cols if c in ev.columns] + ["points", "theme_method", "theme_justification"]].to_csv(
+    ev[["company_key", "org_type", "north_west", "company_country"] + [c for c in cols if c in ev.columns] + ["points"]].to_csv(
         "data/processed/evidence.csv", index=False)
     print(f"companies {len(master)}, evidence rows {len(ev)}; top 15:", file=sys.stderr)
     print(master.head(15)[["rank", "company", "score", "n_studentships", "n_ktp", "n_research_grants", "n_scheme_partner", "papers_funded", "papers_coauthored"]].to_string(index=False), file=sys.stderr)

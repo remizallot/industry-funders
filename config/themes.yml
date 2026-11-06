@@ -4,17 +4,12 @@
 # abstracts, and lists of UKRI research subjects and topics that map to it.
 # Matching is inclusion-first: a record is kept if any theme matches.
 
-# Each theme also carries a one-sentence description used by the optional
-# language-model classifier (scripts/10_classify_llm.py).
-outside_scope_description: "Outside the School's remit: engineering, physics, astronomy, computing and artificial intelligence, mathematics, social sciences, economics, business, arts and humanities, education, architecture, transport, energy systems and electronics without a biological or chemical focus."
-
 themes:
   # Keywords are regular expressions matched case-insensitively. A theme is
   # tagged when a UKRI subject or topic maps to it, when a keyword matches the
   # title, or when at least two different keywords match the abstract or
   # public description. Word boundaries (\b) stop "aging" matching "imaging".
   biomedical_health:
-    description: "Biomedical and health sciences: human and animal health, infection and antimicrobial resistance, immunology and vaccines, cardiovascular and vascular biology, ageing, neuroscience, cancer biology, genetics and genomics, physiology, nutrition and metabolism, haematology, stem cells and regenerative medicine, biomarkers and diagnostics, bioinformatics."
     label: Biomedical and health sciences
     keywords:
       - "\\binfections?\\b|\\binfectious\\b|\\bpathogen(s|ic|esis)?\\b|antimicrobial|antibiotics?\\b|antifungal|antiviral|\\bsepsis\\b|\\bvirolog|\\bvirus(es)?\\b|\\bviral\\b|\\bparasit"
@@ -36,7 +31,6 @@ themes:
       - "Medical Microbiology|Microbiology|Virology|Infection|Immunology|Cardiovascular|Neuroscience|Genetics|Genomics|Haematology|Cancer|Oncology|Stem Cell|Regenerative|Ageing|Nutrition|Metabolism|Physiology|Pharmacology|Drug Discovery|Diagnostics|Bioinformatics|Systems Biology|Cell Biology|Molecular"
 
   molecular_biotech:
-    description: "Molecular biosciences and biotechnology: molecular and cell biology, biochemistry and enzymes, protein science, microbiology and fermentation, synthetic biology, industrial biotechnology and bioprocessing, biofuels and bio-based materials, food science, agricultural and crop biosciences, natural products."
     label: Molecular biosciences and biotechnology
     keywords:
       - "molecular biolog|cell biolog|\\bproteins?\\b|\\benzym|\\bbiochem|metabolic engineer|structural biolog"
@@ -52,7 +46,6 @@ themes:
       - "Biochemistry|Biotechnology|Microbiology|Synthetic Biology|Industrial Biotechnology|Bioprocess|Enzyme|Protein|Food Science|Agri|Plant Science|Crop|Microbial|Fermentation|Structural Biology|Molecular Biology|Cell Biology|Metabolic"
 
   ecology_conservation:
-    description: "Organismal biology, ecology and conservation: ecology, biodiversity, evolution and animal behaviour, conservation and restoration of habitats, wildlife, plants and plant science, marine, freshwater and coastal ecosystems, nature-based solutions, ecosystem services."
     label: Organismal biology, ecology and conservation
     keywords:
       - "\\becolog|\\becosystems?\\b|biodivers|conservation biolog|\\bhabitats?\\b|\\bwildlife\\b|rewilding|restoration ecolog|invasive species|endangered species"
@@ -69,7 +62,6 @@ themes:
       - "Ecology|Biodiversity|Conservation|Evolution|Behaviour|Population Ecology|Community Ecology|Ecosystem|Plant Science|Animal|Zoology|Ornithology|Entomology|Marine|Freshwater|Environmental Microbiology"
 
   environmental_earth:
-    description: "Environmental and earth sciences: pollution and environmental chemistry, water and soil, climate and atmospheric science, geology and earth-surface processes, environmental monitoring and remote sensing, waste and the circular economy, ecotoxicology."
     label: Environmental and earth sciences
     keywords:
       - "environmental chem|\\bpollut|contaminants?\\b|microplastic|pesticides?\\b|heavy metals?\\b|endocrine disrupt|ecotoxic|\\btoxicolog"
@@ -90,7 +82,6 @@ themes:
       - "Environmental|Pollution|Waste|Water|Soil|Climate|Earth|Geolog|Geograph|Hydrolog|Atmospher|Ecotoxic|Remote Sensing|Carbon Cycle|Sediment|Glaci"
 
   chemistry:
-    description: "Chemistry: organic, medicinal and synthetic chemistry, drug design and discovery, analytical chemistry and spectroscopy, forensic science, materials and polymer chemistry, catalysis and green chemistry, electrochemistry, fuel cells and hydrogen, nanomaterials, pharmaceutical formulation."
     label: Chemistry
     keywords:
       - "\\bchemistry\\b|chemical (synthesis|biology)|organic synth|synthetic chem|medicinal chem|drug design|drug discover|lead compounds?\\b|pharmaceutic|\\bformulations?\\b|api manufactur"
@@ -108,7 +99,6 @@ themes:
       - "Chemistry|Chemical|Catalys|Synthesis|Materials|Polymer|Analytical Science|Spectroscop|Electrochem|Fuel Cell|Hydrogen|Energy Storage|Pharmaceutical|Medicinal|Drug|Nanotechnology|Surface|Crystal"
 
   crosscutting:
-    description: "Cross-cutting bio-chemical technology: biomaterials, medical devices and implants, biosensors and in vitro diagnostics, drug delivery, bioprinting, machine learning applied to molecules, proteins or genomes."
     label: Cross-cutting and facility-led
     keywords:
       - "biomaterials?\\b|medical devices?\\b|\\bimplants?\\b|\\bscaffolds?\\b|hydrogels?\\b|drug delivery|nanomedicine"

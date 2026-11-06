@@ -4,5 +4,5 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 docker compose build pipeline
-docker compose run --rm --no-deps pipeline bash scripts/run_all.sh
+docker compose run --rm pipeline bash scripts/run_all.sh
 echo "done: industry-funders-explorer.html and industry-funders-ranked.xlsx refreshed"

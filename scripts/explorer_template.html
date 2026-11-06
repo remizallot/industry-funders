@@ -182,7 +182,7 @@
   <p>Each evidence row earns points by type, scaled by recency over twenty years: studentship 3, fellowship 2, KTP 2, named partnership 2, research grant 1, other Innovate UK project 0.5. Publication rows earn 0.15 per paper funded and 0.05 per paper co-authored, capped at 60 and 20 points per company, so publication volume supports but never dominates the direct evidence of funded people. Companies are keyed on Companies House number where either source gives one, otherwise on a normalised name with legal suffixes removed and a short alias list (GSK, AstraZeneca, Unilever and similar). In the explorer, the score is recomputed from the rows that pass your year range and evidence-type filters.</p>
 
   <h2>How themes are assigned</h2>
-  <p>Themes are assigned in one of two ways, shown per row when a company is expanded. By rule: UKRI subject and topic classifications, OpenAlex subfields, or keywords in titles (one match) and abstracts (two different keywords). By a local language model, when the optional classifier stage has been run: every project description is embedded and matched to the theme descriptions, and projects behind direct evidence or with an ambiguous match are re-read by a small instruction-tuned model that returns a primary theme, secondary themes and a one-line justification (the "why" line). A company's primary theme is the one carrying most of its evidence rows; its profile shows the share of rows in each theme. <span id="tm"></span></p>
+  <p>Themes are assigned by rule: UKRI subject and topic classifications where Gateway to Research has them, OpenAlex subfields for publications, and otherwise keywords, one match in a title or two different keywords in an abstract or public description. Keywords are matched as whole words, so "aging" does not match "imaging". When a company is expanded, each evidence row shows its themes. A company's primary theme is the one carrying most of its evidence rows; its profile shows the share of rows in each theme.</p>
 
   <h2>Limitations</h2>
   <ul>
@@ -208,7 +208,6 @@ const DIRECT = new Set(["S","F","K","P"]);
 const $ = id => document.getElementById(id);
 document.getElementById("built").textContent = D.built;
 document.querySelectorAll(".built, #built2").forEach(e => e.textContent = D.built);
-if (D.theme_methods && document.getElementById("tm")) document.getElementById("tm").textContent = "This build: " + Object.entries(D.theme_methods).map(([k, v]) => `${v.toLocaleString()} rows by ${k}`).join(", ") + ".";
 if (D.pdf) document.getElementById("pdf").href = "data:application/pdf;base64," + D.pdf;
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
@@ -314,7 +313,7 @@ function toggle(tr, r) {
   const ev = document.createElement("tr"); ev.className = "ev";
   const c = D.companies[r.ci];
   const rows = r.rows.map(i => D.rows[i]).sort((a, b) => b[2] - a[2]);
-  const list = rows.slice(0, 400).map(x => `<div><span class="tag ${x[1]}">${x[1]}</span><span class="muted">${x[2] || "n.d."}</span> · ${esc(x[3] >= 0 ? D.unis[x[3]] : "")} · ${esc(x[4])}${x[5] >= 0 ? ` <span class="muted">(${esc(D.schemes[x[5]])})</span>` : ""}${x[7] ? ` <span class="chip">${themeNames(x[7])}</span>` : ""}${x[9] ? `<div class="small" style="margin-left:26px">why: ${esc(x[9])}</div>` : ""}</div>`).join("");
+  const list = rows.slice(0, 400).map(x => `<div><span class="tag ${x[1]}">${x[1]}</span><span class="muted">${x[2] || "n.d."}</span> · ${esc(x[3] >= 0 ? D.unis[x[3]] : "")} · ${esc(x[4])}${x[5] >= 0 ? ` <span class="muted">(${esc(D.schemes[x[5]])})</span>` : ""}${x[7] ? ` <span class="chip">${themeNames(x[7])}</span>` : ""}</div>`).join("");
   ev.innerHTML = `<td colspan="15"><div class="small">${esc(c[6])}${c[5] ? " · size: " + esc(c[5]) : ""}${c[2] ? " · " + esc(c[2]) : ""}${c[8] ? "<br>Theme profile: " + esc(c[8]) : ""}</div><div class="evlist">${list}${rows.length > 400 ? `<div class="muted">and ${rows.length - 400} more</div>` : ""}</div></td>`;
   tr.after(ev);
 }

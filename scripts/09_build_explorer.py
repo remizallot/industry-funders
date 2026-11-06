@@ -65,14 +65,11 @@ def main():
                      uni_idx.get(r.university, -1), title[:100],
                      scheme_idx.get(r.scheme, -1) if isinstance(r.scheme, str) else -1,
                      round(float(r.points), 3) if pd.notna(r.points) else 0,
-                     theme_mask(r.themes), int(r.n_papers) if pd.notna(r.n_papers) else 0,
-                     (r.theme_justification if isinstance(r.theme_justification, str) else "")[:200]
-                     if hasattr(r, "theme_justification") else ""])
+                     theme_mask(r.themes), int(r.n_papers) if pd.notna(r.n_papers) else 0])
     payload = {"companies": companies, "rows": rows, "unis": unis, "schemes": schemes,
                "themes": [THEMES[k]["label"] for k in THEME_KEYS],
                "types": {v: k.replace("_", " ") for k, v in TYPE_CODES.items()},
                "built": pd.Timestamp.today().strftime("%d %B %Y"),
-               "theme_methods": (ev["theme_method"].value_counts().to_dict() if "theme_method" in ev.columns else {}),
                "pdf": base64.b64encode(open("industry-funders-plan.pdf", "rb").read()).decode()
                if os.path.exists("industry-funders-plan.pdf") else ""}
     tpl = open("scripts/explorer_template.html").read()

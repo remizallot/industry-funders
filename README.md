@@ -107,28 +107,9 @@ Gateway to Research catalogue (the slow part, resumable if interrupted),
 queries OpenAlex, scrapes the scheme pages, merges, scores and writes
 `industry-funders-ranked.xlsx` and `industry-funders-explorer.html` in this
 folder. Rerunning only the later steps is possible with
-`docker compose run --rm --no-deps pipeline python scripts/08_merge_all.py`
+`docker compose run --rm pipeline python scripts/08_merge_all.py`
 and so on; each script is independent and reads the files of the one
 before it.
-
-**Optional: theme classification with a local language model (hours)**
-
-```bash
-bash scripts/run_llm_themes.sh
-```
-
-This starts a model server (Ollama) in Docker, downloads two small open
-models on first use (an embedding model, about 0.3 GB, and a 3-billion
-parameter chat model, about 2 GB), classifies every project behind the
-evidence, then rebuilds the workbook and explorer. The embedding pass takes
-minutes; the chat-model pass runs on the CPU inside Docker and takes a few
-seconds per project, so by default it is limited to 3,000 projects per run,
-prioritising projects behind studentships, fellowships, KTPs and named
-partnerships. Every answer is cached, so running the script again continues
-where it stopped. `--max-llm 0` runs embeddings only; `--llm-model
-qwen2.5:7b` uses a larger, slower model. The classifier replaces the keyword
-themes for the projects it has seen and records a one-line justification per
-project, shown in the explorer as a "why" line.
 
 **Changing the scope**
 
@@ -145,9 +126,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
 
 then `bash scripts/run_all.sh` with `python` on the PATH pointing at
-`.venv/bin/python`. The language-model stage needs an Ollama server
-reachable at `OLLAMA_HOST` (the native Ollama app on a Mac uses the GPU and
-is several times faster than the Docker service).
+`.venv/bin/python`.
 
 ## Interactive explorer
 
